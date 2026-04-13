@@ -34,6 +34,7 @@
     "plugins": [
       "expo-font",
       "expo-secure-store"
-    ]
+    ],
+    "owner": "manideep_mpc"
   }
 }
