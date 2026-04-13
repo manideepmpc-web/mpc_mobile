@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Money Tracker",
-    "slug": "money-tracker",
+    "slug": "money-tracker-mpc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
