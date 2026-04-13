@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "app_init",
-    "slug": "app_init",
+    "name": "Money Tracker",
+    "slug": "money-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,8 +28,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "f7255b30-3b30-4eee-aee6-6d041c6af577"
+        "projectId": "6f81dc63-6860-489e-9669-45b2dad9ea4d"
       }
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store"
+    ]
   }
 }

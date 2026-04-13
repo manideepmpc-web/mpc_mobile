@@ -53,4 +53,28 @@ const generateEmployeeId = async () => {
     return `EMP${String(count).padStart(3, '0')}`;
 };
 
-module.exports = { findByEmail, findById, getAllEmployees, createEmployee, updateEmployee, generateEmployeeId };
+const saveOTP = async (email, otp_code) => {
+    if (otp_code === null) {
+        const [result] = await db.query(
+            'UPDATE employees SET otp_code = NULL, otp_expiry = NULL WHERE email = ?',
+            [email]
+        );
+        return result;
+    }
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    const [result] = await db.query(
+        'UPDATE employees SET otp_code = ?, otp_expiry = ? WHERE email = ?',
+        [otp_code, expiry, email]
+    );
+    return result;
+};
+
+const verifyOTP = async (email, otp_code) => {
+    const [rows] = await db.query(
+        'SELECT * FROM employees WHERE email = ? AND otp_code = ? AND otp_expiry > NOW()',
+        [email, otp_code]
+    );
+    return rows[0];
+};
+
+module.exports = { findByEmail, findById, getAllEmployees, createEmployee, updateEmployee, generateEmployeeId, saveOTP, verifyOTP };

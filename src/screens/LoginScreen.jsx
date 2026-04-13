@@ -28,16 +28,6 @@ const LoginScreen = () => {
         }
     };
 
-    const fillDemo = (role) => {
-        if (role === 'admin') {
-            setEmail('admin@mpc.com');
-            setPassword('Admin@123');
-        } else {
-            setEmail('employee@mpc.com');
-            setPassword('Emp@123');
-        }
-    };
-
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
@@ -55,14 +45,14 @@ const LoginScreen = () => {
                     <View style={styles.logoBg}>
                         <Ionicons name="cash" size={52} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.appName}>LoanTracker</Text>
-                    <Text style={styles.tagline}>Personal Loan Management</Text>
+                    <Text style={styles.appName}>Money Tracker</Text>
+                    <Text style={styles.tagline}>Track Your Money</Text>
                 </LinearGradient>
 
                 {/* ── Login Card ── */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Welcome Back 👋</Text>
-                    <Text style={styles.cardSub}>Sign in to manage your loans</Text>
+                    <Text style={styles.cardSub}>Sign in to track your money</Text>
 
                     {/* Email */}
                     <View style={styles.fieldLabel}>
@@ -114,30 +104,6 @@ const LoginScreen = () => {
                         </TouchableOpacity>
                     </LinearGradient>
 
-                    {/* Quick Login Shortcuts */}
-                    <Text style={styles.demoTip}>Quick demo login:</Text>
-                    <View style={styles.demoRow}>
-                        <TouchableOpacity style={styles.demoChip} onPress={() => fillDemo('admin')} activeOpacity={0.8}>
-                            <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.primary} />
-                            <Text style={styles.demoChipText}>Admin Login</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.demoChip, styles.demoChipEmp]} onPress={() => fillDemo('employee')} activeOpacity={0.8}>
-                            <Ionicons name="person-outline" size={14} color={COLORS.accent} />
-                            <Text style={[styles.demoChipText, { color: COLORS.accent }]}>Employee Login</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Credentials info */}
-                    <View style={styles.credBox}>
-                        <View style={styles.credRow}>
-                            <View style={styles.credDot} />
-                            <Text style={styles.credText}><Text style={styles.credBold}>Admin:</Text> admin@mpc.com / Admin@123</Text>
-                        </View>
-                        <View style={styles.credRow}>
-                            <View style={[styles.credDot, { backgroundColor: COLORS.accent }]} />
-                            <Text style={styles.credText}><Text style={styles.credBold}>Employee:</Text> employee@mpc.com / Emp@123</Text>
-                        </View>
-                    </View>
 
                     {/* Signup Link */}
                     <TouchableOpacity
@@ -157,7 +123,7 @@ const LoginScreen = () => {
                     <Text style={styles.footerText}>MODERN · PERSONALIZED · CONNECTED</Text>
                     <View style={styles.footerDot} />
                 </View>
-                <Text style={styles.copyright}>© 2026 LoanTracker · All rights reserved</Text>
+                <Text style={styles.copyright}>© 2026 Money Tracker · All rights reserved</Text>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -185,18 +151,6 @@ const styles = StyleSheet.create({
     btnGradient: { borderRadius: 14, marginBottom: 20 },
     signInBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
     btnText: { color: COLORS.white, fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
-
-    demoTip: { fontSize: 12, color: COLORS.textMuted, textAlign: 'center', marginBottom: 10 },
-    demoRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-    demoChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
-    demoChipEmp: { borderColor: COLORS.accent, backgroundColor: COLORS.accentLight },
-    demoChipText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
-
-    credBox: { backgroundColor: COLORS.background, borderRadius: 12, padding: 12, gap: 6 },
-    credRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    credDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primary },
-    credText: { fontSize: 12, color: COLORS.textSecondary, flexShrink: 1 },
-    credBold: { fontWeight: '700', color: COLORS.textPrimary },
 
     footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 32, gap: 8 },
     footerDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: COLORS.accent },

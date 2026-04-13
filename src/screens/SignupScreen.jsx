@@ -8,9 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
-import { signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-import { otpSession } from '../utils/otpSession';
+import { authService } from '../services';
 
 const SignupScreen = () => {
     const navigation = useNavigation();
@@ -21,30 +19,11 @@ const SignupScreen = () => {
     const [confirmPass, setConfirmPass] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const recaptchaVerifierRef = useRef(null);
 
-    const formatPhoneE164 = (raw) => {
-        const digits = raw.replace(/\D/g, '');
-        // If user entered 10 digits, assume India (+91)
-        if (digits.length === 10) return `+91${digits}`;
-        // If already includes country code (11+ digits)
-        if (digits.length >= 11) return `+${digits}`;
-        return null;
-    };
 
     const handleRegister = async () => {
         if (!name.trim()) return Alert.alert('Missing Field', 'Please enter your full name.');
         if (!email.trim()) return Alert.alert('Missing Field', 'Please enter your email.');
-        if (!phone.trim()) return Alert.alert('Missing Field', 'Phone number is required for OTP verification.');
-
-        const formattedPhone = formatPhoneE164(phone.trim());
-        if (!formattedPhone) {
-            return Alert.alert(
-                'Invalid Phone Number',
-                'Please enter a valid 10-digit mobile number (e.g. 9876543210) or include the country code (e.g. +919876543210).'
-            );
-        }
-
         if (!password.trim() || password.length < 6)
             return Alert.alert('Validation', 'Password must be at least 6 characters.');
         if (password !== confirmPass)
@@ -52,50 +31,30 @@ const SignupScreen = () => {
 
         setLoading(true);
         try {
-            let confirmation;
-
-            if (Platform.OS === 'web') {
-                // Web requires a RecaptchaVerifier — create it once and reuse
-                if (!recaptchaVerifierRef.current) {
-                    recaptchaVerifierRef.current = new RecaptchaVerifier(
-                        auth,
-                        'recaptcha-container',
-                        { size: 'invisible' }
-                    );
-                }
-                confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current);
-            } else {
-                // Native Android/iOS — no RecaptchaVerifier needed
-                confirmation = await signInWithPhoneNumber(auth, formattedPhone);
-            }
-
             const formData = {
                 name: name.trim(),
                 email: email.trim().toLowerCase(),
                 password,
-                phone: formattedPhone,
+                phone: phone.trim() || '',
                 role: 'employee',
                 department_id: 1,
+                designation: 'Employee',
                 date_of_joining: new Date().toISOString().split('T')[0],
             };
 
-            // Store in module-level session (avoids non-serializable nav params warning)
-            otpSession.setConfirmation(confirmation);
-            otpSession.setFormData(formData);
+            // Call backend register (sends email OTP)
+            await authService.register(formData);
 
-            // Navigate without passing confirmation/formData as params
-            navigation.navigate('OTPVerification');
+            // Navigate to OTP verification with email and password
+            navigation.navigate('OTPVerification', { 
+                email: email.trim().toLowerCase(),
+                password: password
+            });
+            Alert.alert('Success', 'OTP sent to your email!');
         } catch (err) {
-            console.error('Phone auth error:', err);
-            const msg =
-                err.code === 'auth/invalid-phone-number'
-                    ? 'Invalid phone number. Please enter a valid mobile number.'
-                    : err.code === 'auth/too-many-requests'
-                        ? 'Too many attempts. Please try again later.'
-                        : err.code === 'auth/quota-exceeded'
-                            ? 'SMS quota exceeded. Please try again later.'
-                            : err.message || 'Failed to send OTP. Please try again.';
-            Alert.alert('OTP Failed', msg);
+            console.error('Registration error:', err);
+            const msg = err.response?.data?.message || 'Registration failed. Please try again.';
+            Alert.alert('Registration Failed', msg);
         } finally {
             setLoading(false);
         }
@@ -104,8 +63,6 @@ const SignupScreen = () => {
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
-            {/* Invisible reCAPTCHA container — required by Firebase Phone Auth on web */}
-            <View nativeID="recaptcha-container" style={{ position: 'absolute', bottom: 0, width: 0, height: 0 }} />
             <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
                 {/* Header */}
@@ -118,14 +75,14 @@ const SignupScreen = () => {
                     <View style={styles.iconWrap}>
                         <Ionicons name="cash" size={48} color={COLORS.white} />
                     </View>
-                    <Text style={styles.appName}>LoanTracker</Text>
-                    <Text style={styles.tagline}>Personal Loan Management</Text>
+                    <Text style={styles.appName}>Money Tracker</Text>
+                    <Text style={styles.tagline}>Track Your Money</Text>
                 </LinearGradient>
 
                 {/* Card */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Create Account</Text>
-                    <Text style={styles.cardSub}>Sign up to start tracking your loans</Text>
+                    <Text style={styles.cardSub}>Sign up to start tracking your money</Text>
 
                     {/* Full Name */}
                     <Field icon="person-outline" label="Full Name">
@@ -152,22 +109,17 @@ const SignupScreen = () => {
                         />
                     </Field>
 
-                    {/* Phone — REQUIRED for OTP */}
-                    <Field icon="call-outline" label="Mobile Number (OTP will be sent)">
-                        <View style={styles.phoneRow}>
-                            <View style={styles.countryCode}>
-                                <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
-                            </View>
-                            <TextInput
-                                style={[styles.input, styles.phoneInput]}
-                                placeholder="98xxxxxxxx"
-                                placeholderTextColor={COLORS.textMuted}
-                                value={phone}
-                                onChangeText={setPhone}
-                                keyboardType="phone-pad"
-                                maxLength={10}
-                            />
-                        </View>
+                    {/* Phone — Optional */}
+                    <Field icon="call-outline" label="Mobile Number (Optional)">
+                        <TextInput
+                            style={styles.input}
+                            placeholder="98xxxxxxxx"
+                            placeholderTextColor={COLORS.textMuted}
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                            maxLength={10}
+                        />
                     </Field>
 
                     {/* Password */}
@@ -201,9 +153,9 @@ const SignupScreen = () => {
 
                     {/* OTP Notice */}
                     <View style={styles.otpNotice}>
-                        <Ionicons name="shield-checkmark-outline" size={15} color={COLORS.primary} />
+                        <Ionicons name="mail-outline" size={15} color={COLORS.primary} />
                         <Text style={styles.otpNoticeText}>
-                            A 6-digit OTP will be sent to your mobile number via SMS to verify your identity.
+                            A 6-digit OTP will be sent to your email address to verify your identity.
                         </Text>
                     </View>
 
@@ -213,7 +165,7 @@ const SignupScreen = () => {
                             {loading
                                 ? <ActivityIndicator color={COLORS.white} />
                                 : <>
-                                    <Ionicons name="phone-portrait-outline" size={20} color={COLORS.white} style={{ marginRight: 8 }} />
+                                    <Ionicons name="mail-outline" size={20} color={COLORS.white} style={{ marginRight: 8 }} />
                                     <Text style={styles.btnText}>Send OTP & Continue</Text>
                                 </>
                             }
@@ -271,14 +223,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14, paddingVertical: 12, fontSize: 14,
         color: COLORS.textPrimary, backgroundColor: COLORS.background, marginBottom: 14,
     },
-    phoneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 0 },
-    countryCode: {
-        borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 12,
-        paddingHorizontal: 12, paddingVertical: 12, backgroundColor: COLORS.background,
-        marginBottom: 14,
-    },
-    countryCodeText: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '600' },
-    phoneInput: { flex: 1 },
     passRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 10 },
     eyeBtn: { padding: 10, backgroundColor: COLORS.background, borderRadius: 10, borderWidth: 1.5, borderColor: COLORS.border },
     otpNotice: {

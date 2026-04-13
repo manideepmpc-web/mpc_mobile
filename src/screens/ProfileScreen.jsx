@@ -155,7 +155,7 @@ export default function ProfileScreen({ navigation }) {
                 </LinearGradient>
             </TouchableOpacity>
 
-            <Text style={styles.versionText}>LoanTracker v1.0.3</Text>
+            <Text style={styles.versionText}>Money Tracker v1.0.3</Text>
         </ScrollView>
     );
 }

@@ -2,6 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const employeeModel = require('../models/employeeModel');
 const { success, error } = require('../utils/responseHelper');
+const sendOTPEmail = require('../utils/sendEmail');
+
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+};
 
 // POST /api/auth/login
 const login = async (req, res) => {
@@ -40,7 +45,7 @@ const login = async (req, res) => {
     }
 };
 
-// POST /api/auth/register (admin only)
+// POST /api/auth/register
 const register = async (req, res) => {
     try {
         const { name, email, password, phone, department_id, designation, role, date_of_joining, gender, date_of_birth, address } = req.body;
@@ -63,7 +68,12 @@ const register = async (req, res) => {
             date_of_joining, gender, date_of_birth, address
         });
 
-        return success(res, { employee_id }, `Employee registered successfully. ID: ${employee_id}`, 201);
+        // Generate and send OTP for verification
+        const otp_code = generateOTP();
+        await employeeModel.saveOTP(email, otp_code);
+        await sendOTPEmail(email, otp_code);
+
+        return success(res, { employee_id, otp_sent: true }, `Employee registered successfully. ID: ${employee_id}. OTP sent to email.`, 201);
     } catch (err) {
         console.error('Register error:', err);
         return error(res, 'Server error during registration.', 500);
@@ -82,4 +92,28 @@ const getMe = async (req, res) => {
     }
 };
 
-module.exports = { login, register, getMe };
+// POST /api/auth/verify-otp
+const verifyOTP = async (req, res) => {
+    try {
+        const { email, otp_code } = req.body;
+
+        if (!email || !otp_code) {
+            return error(res, 'Email and OTP are required.', 400);
+        }
+
+        const user = await employeeModel.verifyOTP(email, otp_code);
+
+        if (user) {
+            // Clear OTP after successful verification
+            await employeeModel.saveOTP(email, null);
+            return success(res, {}, 'OTP verified ✅');
+        } else {
+            return error(res, 'Invalid or expired OTP ❌', 400);
+        }
+    } catch (err) {
+        console.error('OTP verification error:', err);
+        return error(res, 'Server error during OTP verification.', 500);
+    }
+};
+
+module.exports = { login, register, getMe, verifyOTP };

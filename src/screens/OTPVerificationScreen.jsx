@@ -10,9 +10,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
 import { useAuth } from '../store/authStore';
-import { signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-import { otpSession } from '../utils/otpSession';
+import { authService } from '../services';
+import { useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const OTP_LENGTH = 6;
@@ -22,27 +21,26 @@ const BOX_SIZE = Math.min(48, (width - 120) / 6);
 
 const OTPVerificationScreen = () => {
     const navigation = useNavigation();
-    const { register } = useAuth();
+    const route = useRoute();
+    const { login } = useAuth();
 
-    // Get non-serializable data from session store
-    const confirmation = otpSession.getConfirmation();
-    const formData = otpSession.getFormData();
+    // Get email and password from route params
+    const { email, password } = route.params || {};
 
     const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
     const [loading, setLoading] = useState(false);
     const [timer, setTimer] = useState(RESEND_COOLDOWN);
     const [canResend, setCanResend] = useState(false);
-    const [currentConfirmation, setCurrentConfirmation] = useState(confirmation);
 
     const inputRefs = useRef([]);
 
-    // Redirect if session is missing
+    // Redirect if email is missing
     useEffect(() => {
-        if (!currentConfirmation || !formData) {
+        if (!email) {
             Alert.alert('Session Expired', 'Please restart the signup process.');
             navigation.navigate('Signup');
         }
-    }, [currentConfirmation, formData]);
+    }, [email]);
 
     // Countdown timer
     useEffect(() => {
@@ -81,24 +79,21 @@ const OTPVerificationScreen = () => {
 
         setLoading(true);
         try {
-            // 1. Verify with Firebase
-            await currentConfirmation.confirm(otpCode);
+            // Verify OTP with backend
+            await authService.verifyOTP(email, otpCode);
 
-            // 2. Register on Backend
-            const result = await register(formData);
-            if (!result.success) {
-                Alert.alert('Registration Failed', result.message);
+            // Auto-login after successful OTP verification
+            const loginResult = await login(email, password);
+            if (!loginResult.success) {
+                Alert.alert('Login Failed', loginResult.message);
                 return;
             }
 
-            // Success! Navigtion handled by authStore/AppNavigator
-            otpSession.clear();
+            // Success - navigation handled by authStore
         } catch (error) {
             console.error('OTP verify error:', error);
-            const msg = error.code === 'auth/invalid-verification-code'
-                ? 'Invalid OTP code. Please check and try again.'
-                : error.message || 'Verification failed.';
-            Alert.alert('Error', msg);
+            const msg = error.response?.data?.message || 'Invalid or expired OTP. Please try again.';
+            Alert.alert('Verification Failed', msg);
         } finally {
             setLoading(false);
         }
@@ -108,21 +103,21 @@ const OTPVerificationScreen = () => {
         if (!canResend) return;
         setLoading(true);
         try {
-            const newConfirmation = await signInWithPhoneNumber(auth, formData.phone);
-            setCurrentConfirmation(newConfirmation);
-            otpSession.setConfirmation(newConfirmation);
+            // Call register again to resend OTP
+            await authService.register({ email });
             setOtp(Array(OTP_LENGTH).fill(''));
             setTimer(RESEND_COOLDOWN);
             setCanResend(false);
-            Alert.alert('Success', 'New OTP sent!');
+            Alert.alert('Success', 'New OTP sent to your email!');
         } catch (err) {
-            Alert.alert('Failed', 'Could not resend OTP.');
+            console.error('Resend error:', err);
+            Alert.alert('Failed', 'Could not resend OTP. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const maskedPhone = formData?.phone ? formData.phone.replace(/(\+\d{2})(\d{6})(\d{4})/, '$1 ****** $3') : '***';
+    const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : '***';
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -142,13 +137,13 @@ const OTPVerificationScreen = () => {
                         <Ionicons name="shield-checkmark" size={48} color={COLORS.white} />
                     </View>
                     <Text style={styles.headerTitle}>OTP Verification</Text>
-                    <Text style={styles.headerSub}>Verify your phone number</Text>
+                    <Text style={styles.headerSub}>Verify your email address</Text>
                 </LinearGradient>
 
                 {/* Card Section */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Enter 6-Digit Code</Text>
-                    <Text style={styles.cardSub}>Code sent to {maskedPhone}</Text>
+                    <Text style={styles.cardSub}>Code sent to {maskedEmail}</Text>
 
                     {/* OTP Inputs */}
                     <View style={styles.otpRow}>
@@ -187,7 +182,7 @@ const OTPVerificationScreen = () => {
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.changePhone}>
-                        <Text style={styles.changePhoneText}>Wrong number? Change it</Text>
+                        <Text style={styles.changePhoneText}>Wrong email? Change it</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

@@ -36,8 +36,8 @@ export const AuthProvider = ({ children }) => {
     // On app start — check if we have a saved token
     const loadStoredToken = async () => {
         try {
-            const token = await AsyncStorage.getItem('loantracker_token');
-            const userStr = await AsyncStorage.getItem('loantracker_user');
+            const token = await AsyncStorage.getItem('moneytracker_token');
+            const userStr = await AsyncStorage.getItem('moneytracker_user');
             if (token && userStr) {
                 setAuthToken(token);
                 // Verify token is still valid by calling /me
@@ -71,8 +71,8 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await authService.login(email, password);
             const { token, employee } = res.data.data;
-            await AsyncStorage.setItem('loantracker_token', token);
-            await AsyncStorage.setItem('loantracker_user', JSON.stringify(employee));
+            await AsyncStorage.setItem('moneytracker_token', token);
+            await AsyncStorage.setItem('moneytracker_user', JSON.stringify(employee));
             setAuthToken(token);
             dispatch({ type: 'LOGIN', payload: { token, user: employee } });
             return { success: true };
@@ -95,8 +95,8 @@ export const AuthProvider = ({ children }) => {
             const loginRes = await authService.login(formData.email, formData.password);
             const { token, employee } = loginRes.data.data;
 
-            await AsyncStorage.setItem('loantracker_token', token);
-            await AsyncStorage.setItem('loantracker_user', JSON.stringify(employee));
+            await AsyncStorage.setItem('moneytracker_token', token);
+            await AsyncStorage.setItem('moneytracker_user', JSON.stringify(employee));
             setAuthToken(token);
             dispatch({ type: 'LOGIN', payload: { token, user: employee } });
             return { success: true };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +16,7 @@ const GradientIcon = ({ name, size }) => (
         colors={[COLORS.primary, COLORS.accent]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ width: size + 16, height: size + 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: -4 }}
+        style={{ width: 48, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
     >
         <Ionicons name={name} size={size} color={COLORS.white} />
     </LinearGradient>
@@ -33,21 +34,26 @@ const BottomTabNavigator = () => (
         screenOptions={({ route }) => {
             const tab = tabs.find((t) => t.name === route.name);
             return {
-                tabBarIcon: ({ focused, size }) =>
-                    focused
-                        ? <GradientIcon name={tab.icon} size={size - 2} />
-                        : <Ionicons name={`${tab.icon}-outline`} size={size} color={COLORS.textMuted} />,
+                tabBarIcon: ({ focused, size }) => (
+                    <View style={{ width: 48, height: 32, justifyContent: 'center', alignItems: 'center' }}>
+                        {focused ? (
+                            <GradientIcon name={tab.icon} size={size - 2} />
+                        ) : (
+                            <Ionicons name={`${tab.icon}-outline`} size={size + 2} color={COLORS.textMuted} />
+                        )}
+                    </View>
+                ),
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: COLORS.textMuted,
                 tabBarStyle: {
                     backgroundColor: COLORS.white,
                     borderTopWidth: 1,
                     borderTopColor: COLORS.border,
-                    height: 64,
-                    paddingBottom: 10,
-                    paddingTop: 6,
+                    height: Platform.OS === 'ios' ? 88 : 75,
+                    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+                    paddingTop: 10,
                 },
-                tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+                tabBarLabelStyle: { fontSize: 11, fontWeight: '700', paddingBottom: Platform.OS === 'android' ? 2 : 0 },
                 headerShown: true,
                 headerStyle: {
                     backgroundColor: COLORS.white,

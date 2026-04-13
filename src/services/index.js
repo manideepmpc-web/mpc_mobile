@@ -3,6 +3,7 @@ import api from './api';
 export const authService = {
     login: (email, password) => api.post('/auth/login', { email, password }),
     register: (data) => api.post('/auth/register', data),
+    verifyOTP: (email, otp_code) => api.post('/auth/verify-otp', { email, otp_code }),
     getMe: () => api.get('/auth/me'),
 };
 
