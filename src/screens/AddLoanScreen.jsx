@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Contacts from 'expo-contacts';
 import { loanService } from '../services/loanService';
 import { COLORS } from '../constants/colors';
 
@@ -18,6 +19,7 @@ const Field = ({ label, children, required }) => (
 export default function AddLoanScreen({ navigation }) {
     const [borrowerName, setBorrowerName] = useState('');
     const [borrowerContact, setBorrowerContact] = useState('');
+    const [borrowerEmail, setBorrowerEmail] = useState('');
     const [type, setType] = useState('given'); // 'given' | 'taken'
     const [principal, setPrincipal] = useState('');
     const [interestRate, setInterestRate] = useState('0');
@@ -25,6 +27,31 @@ export default function AddLoanScreen({ navigation }) {
     const [dueDate, setDueDate] = useState('');
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const handlePickContact = async () => {
+        try {
+            const { status } = await Contacts.requestPermissionsAsync();
+            if (status === 'granted') {
+                const contact = await Contacts.presentContactPickerAsync();
+                if (contact) {
+                    if (contact.name) {
+                        setBorrowerName(contact.name);
+                    }
+                    if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                        setBorrowerContact(contact.phoneNumbers[0].number);
+                    }
+                    if (contact.emails && contact.emails.length > 0) {
+                        setBorrowerEmail(contact.emails[0].email);
+                    }
+                }
+            } else {
+                Alert.alert('Permission required', 'Please allow contacts access to pick a contact.');
+            }
+        } catch (error) {
+            console.log('Error picking contact:', error);
+            Alert.alert('Error', 'Could not open contacts.');
+        }
+    };
 
     const handleSubmit = async () => {
         if (!borrowerName.trim()) return Alert.alert('Validation', 'Borrower name is required.');
@@ -36,6 +63,7 @@ export default function AddLoanScreen({ navigation }) {
             await loanService.createLoan({
                 borrower_name: borrowerName.trim(),
                 borrower_contact: borrowerContact.trim() || null,
+                borrower_email: borrowerEmail.trim() || null,
                 type,
                 principal_amount: Number(principal),
                 interest_rate: Number(interestRate) || 0,
@@ -104,14 +132,30 @@ export default function AddLoanScreen({ navigation }) {
                     />
                 </Field>
 
-                <Field label="Contact (Phone / Email)">
+                <Field label="Phone Number">
+                    <View style={styles.inputWithIcon}>
+                        <TextInput
+                            style={styles.inputFlex}
+                            placeholder="e.g. 98xxxxxxx0"
+                            placeholderTextColor={COLORS.textMuted}
+                            value={borrowerContact}
+                            onChangeText={setBorrowerContact}
+                            keyboardType="phone-pad"
+                        />
+                        <TouchableOpacity style={styles.iconButton} onPress={handlePickContact} activeOpacity={0.7}>
+                            <Ionicons name="book" size={20} color={COLORS.primary} />
+                        </TouchableOpacity>
+                    </View>
+                </Field>
+
+                <Field label="Email Address">
                     <TextInput
                         style={styles.input}
-                        placeholder="e.g. 98xxxxxxx0"
+                        placeholder="e.g. rahul@example.com"
                         placeholderTextColor={COLORS.textMuted}
-                        value={borrowerContact}
-                        onChangeText={setBorrowerContact}
-                        keyboardType="phone-pad"
+                        value={borrowerEmail}
+                        onChangeText={setBorrowerEmail}
+                        keyboardType="email-address"
                     />
                 </Field>
 
@@ -207,6 +251,16 @@ const styles = StyleSheet.create({
     input: {
         backgroundColor: COLORS.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
         fontSize: 14, color: COLORS.textPrimary, borderWidth: 1, borderColor: COLORS.border,
+    },
+    inputWithIcon: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background,
+        borderRadius: 12, borderWidth: 1, borderColor: COLORS.border,
+    },
+    inputFlex: {
+        flex: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: COLORS.textPrimary,
+    },
+    iconButton: {
+        padding: 12, justifyContent: 'center', alignItems: 'center',
     },
     textArea: { height: 80 },
     dateRow: { flexDirection: 'row' },

