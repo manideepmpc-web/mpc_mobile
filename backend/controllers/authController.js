@@ -18,6 +18,32 @@ const login = async (req, res) => {
         }
 
         // Dummy credentials check - skip validation for these
+        // Test credentials
+        if (email === 'test@mpc.com' && password === 'mpc@123') {
+            const token = jwt.sign(
+                { id: 1, email: 'test@mpc.com', role: 'admin', name: 'Test User' },
+                process.env.JWT_SECRET,
+                { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+            );
+
+            const dummyEmployee = {
+                id: 1,
+                employee_id: 'TEST001',
+                name: 'Test User',
+                email: 'test@mpc.com',
+                phone: '9999999999',
+                department_id: 1,
+                designation: 'Test Admin',
+                role: 'admin',
+                date_of_joining: '2026-04-16',
+                gender: 'male',
+                is_active: 1
+            };
+
+            return success(res, { token, employee: dummyEmployee }, 'Login successful.');
+        }
+
+        // Original demo credentials
         if (email === 'mpc_hyd@moneytracker.com' && password === 'mpc_hyd@1') {
             const token = jwt.sign(
                 { id: 0, email: 'mpc_hyd@moneytracker.com', role: 'admin', name: 'Money Tracker Admin' },
