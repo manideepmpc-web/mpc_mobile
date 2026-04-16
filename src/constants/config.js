@@ -1,8 +1,7 @@
 // Change this to your machine's local IP when testing on a physical device
 // e.g., http://192.168.1.100:5000/api
-// export const API_BASE_URL = 'http://localhost:5000/api';
-// For internet access without WiFi, use localtunnel or ngrok URL
-export const API_BASE_URL = 'https://social-chicken-refuse.loca.lt/api';
+export const API_BASE_URL = 'http://10.220.86.246:5000/api';
+// For internet access without WiFi, use localtunnel or public IP (with port forwarding)
 
 export const LEAVE_TYPES = [
     { label: 'Casual Leave', value: 'casual' },
