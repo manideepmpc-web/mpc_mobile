@@ -3,6 +3,8 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAuthToken } from '../services/api';
 import { authService } from '../services';
+import DEMO_MODE from '../config/demoMode';
+import mockAuthService from '../services/mockAuthService';
 
 const AuthContext = createContext();
 
@@ -69,7 +71,9 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const res = await authService.login(email, password);
+            // Use mock auth in demo mode, real auth otherwise
+            const authService_ = DEMO_MODE ? mockAuthService : authService;
+            const res = await authService_.login(email, password);
             const { token, employee } = res.data.data;
             await AsyncStorage.setItem('moneytracker_token', token);
             await AsyncStorage.setItem('moneytracker_user', JSON.stringify(employee));
@@ -88,11 +92,14 @@ export const AuthProvider = ({ children }) => {
     // Backend /auth/register returns { employee_id } only, so we chain a login call.
     const register = async (formData) => {
         try {
+            // Use mock auth in demo mode, real auth otherwise
+            const authService_ = DEMO_MODE ? mockAuthService : authService;
+
             // Step 1: Create the account
-            await authService.register(formData);
+            await authService_.register(formData);
 
             // Step 2: Login to get token + full employee data
-            const loginRes = await authService.login(formData.email, formData.password);
+            const loginRes = await authService_.login(formData.email, formData.password);
             const { token, employee } = loginRes.data.data;
 
             await AsyncStorage.setItem('moneytracker_token', token);

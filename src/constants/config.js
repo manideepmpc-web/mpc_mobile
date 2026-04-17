@@ -1,7 +1,7 @@
 // Change this to your machine's local IP when testing on a physical device
-// For mobile APK, use your computer's WiFi IP
-// export const API_BASE_URL = 'http://localhost:5000/api'; // For web browser
-export const API_BASE_URL = 'http://10.40.126.246:5000/api'; // For mobile APK
+// For local testing on same PC, use localhost
+// export const API_BASE_URL = 'http://10.220.86.246:5000/api'; // For mobile devices
+export const API_BASE_URL = 'http://localhost:5000/api'; // For local testing
 
 // export const API_BASE_URL = 'http://10.230.211.46:5000/api';
 
