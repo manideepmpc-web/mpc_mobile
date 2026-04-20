@@ -168,3 +168,4 @@ const verifyOTP = async (req, res) => {
 };
 
 module.exports = { login, register, getMe, verifyOTP };
+
