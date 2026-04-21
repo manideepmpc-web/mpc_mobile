@@ -14,11 +14,11 @@ import { authService } from '../services';
 import { useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
-const OTP_LENGTH = 6;
+const OTP_LENGTH = 4;
 const RESEND_COOLDOWN = 60;
 const DUMMY_OTP = '8888'; // 🎯 Dummy OTP for testing
-// Calculate box size to fit within the card (padding: 24*2, margin: 18*2, gap: 8*5)
-const BOX_SIZE = Math.min(48, (width - 120) / 6);
+// Calculate box size to fit within the card (padding: 24*2, margin: 18*2, gap: 8*3)
+const BOX_SIZE = Math.min(48, (width - 120) / 4);
 
 const OTPVerificationScreen = () => {
     const navigation = useNavigation();
@@ -82,7 +82,7 @@ const OTPVerificationScreen = () => {
     const handleVerify = async () => {
         const otpCode = otp.join('');
         if (otpCode.length < OTP_LENGTH) {
-            return Alert.alert('Incomplete OTP', 'Please enter all 6 digits.');
+            return Alert.alert('Incomplete OTP', 'Please enter all 4 digits.');
         }
 
         setLoading(true);
@@ -150,7 +150,7 @@ const OTPVerificationScreen = () => {
 
                 {/* Card Section */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Enter 6-Digit Code</Text>
+                    <Text style={styles.cardTitle}>Enter 4-Digit Code</Text>
                     <Text style={styles.cardSub}>Code sent to {maskedEmail}</Text>
                     
                     {/* 🎯 Dummy OTP Indicator */}

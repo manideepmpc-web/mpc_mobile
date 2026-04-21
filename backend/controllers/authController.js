@@ -5,7 +5,7 @@ const { success, error } = require('../utils/responseHelper');
 const sendOTPEmail = require('../utils/sendEmail');
 
 const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    return Math.floor(1000 + Math.random() * 9000); // 4-digit OTP
 };
 
 // POST /api/auth/login
@@ -99,7 +99,7 @@ const login = async (req, res) => {
 // POST /api/auth/register
 const register = async (req, res) => {
     try {
-        const { name, email, password, phone, department_id, designation, role, date_of_joining, gender, date_of_birth, address } = req.body;
+        const { name, email, password, phone, designation, role, date_of_joining, gender, date_of_birth, address } = req.body;
 
         if (!name || !email || !password) {
             return error(res, 'Name, email, and password are required.', 400);
@@ -115,7 +115,7 @@ const register = async (req, res) => {
 
         await employeeModel.createEmployee({
             employee_id, name, email, password: hashedPassword,
-            phone, department_id, designation, role: role || 'employee',
+            phone, designation, role: role || 'employee',
             date_of_joining, gender, date_of_birth, address
         });
 

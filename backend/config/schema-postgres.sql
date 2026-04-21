@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS employees (
   email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
-  department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
   designation VARCHAR(100),
   role role_enum DEFAULT 'employee',
   date_of_joining DATE,
@@ -145,14 +144,13 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Seed: Admin user (password: Admin@123)
 INSERT INTO employees 
-  (employee_id, name, email, password, phone, department_id, designation, role, date_of_joining, gender)
+  (employee_id, name, email, password, phone, designation, role, date_of_joining, gender)
 VALUES (
   'EMP001',
   'MPC Admin',
   'admin@mpc.com',
   '$2b$12$4Uuz0w2gIw4jjcNrwnjVuucezHvGXr1kff.l4GkFu2jZ/IYKYHw0S',
   '9000000000',
-  1,
   'HR Manager',
   'admin',
   CURRENT_DATE,
