@@ -46,7 +46,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, 'localhost', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 MPC HRMS Server running on http://localhost:${PORT}`);
     console.log(`📅 Started at: ${new Date().toLocaleString()}`);
     console.log(`🔒 JWT Auth: Enabled`);
