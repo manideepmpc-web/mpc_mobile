@@ -2,7 +2,7 @@
 // Demo mode configuration - switch between backend API and mock authentication
 
 // 🎯 SET THIS TO TRUE FOR DEMO MODE (NO BACKEND NEEDED)
-export const DEMO_MODE = true;
+export const DEMO_MODE = false;
 
 // ⚠️ When DEMO_MODE = true:
 // - Login works with test credentials WITHOUT backend
