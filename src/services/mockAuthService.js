@@ -38,17 +38,8 @@ const DEMO_USERS = {
 // Generate a mock JWT token
 const generateMockToken = (user) => {
     // Simulated JWT (not real, just for demo)
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payload = Buffer.from(
-        JSON.stringify({
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            name: user.name,
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
-        })
-    ).toString('base64');
+    const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'; // Base64 for {"alg":"HS256","typ":"JWT"}
+    const payload = `mock_payload_for_${user.id}`;
     const signature = 'demo_signature';
     return `${header}.${payload}.${signature}`;
 };
