@@ -1,8 +1,12 @@
 // Change this to your machine's local IP when testing on a physical device
 // For local testing on same PC, use localhost
 // export const API_BASE_URL = 'http://10.220.86.246:5000/api'; // For mobile devices
-export const API_BASE_URL = 'http://localhost:5000/api'; // For local testing
+// export const API_BASE_URL = 'http://localhost:5000/api'; // For local testing
 
+// 🚀 PRODUCTION: Railway Backend URL
+export const API_BASE_URL = 'https://mpc-backend-production-59a0.up.railway.app/api'; // Railway Production URL
+
+// For mobile device testing (use your machine's IP if testing locally)
 // export const API_BASE_URL = 'http://10.230.211.46:5000/api';
 
 export const LEAVE_TYPES = [
