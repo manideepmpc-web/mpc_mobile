@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }) => {
 
     const clearStorage = async () => {
         try {
-            await AsyncStorage.removeItem('loantracker_token');
-            await AsyncStorage.removeItem('loantracker_user');
+            await AsyncStorage.removeItem('moneytracker_token');
+            await AsyncStorage.removeItem('moneytracker_user');
         } catch (err) {
             console.error('Error clearing storage:', err);
         }

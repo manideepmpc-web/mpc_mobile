@@ -41,7 +41,7 @@ export default function LoanHistoryScreen({ navigation }) {
 
             setAllPayments(flat);
         } catch {
-            Alert.alert('Error', 'Failed to load payment history.');
+            Alert.alert('Development Mode', 'App is under development mode.');
         } finally {
             setLoading(false);
             setRefreshing(false);

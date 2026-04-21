@@ -51,7 +51,7 @@ export default function LoansScreen({ navigation }) {
             setSummary(sumRes.data.data);
             setLoans(loansRes.data.data || []);
         } catch (e) {
-            Alert.alert('Error', 'Failed to load loans. Please check your connection.');
+            Alert.alert('Development Mode', 'App is under development mode.');
         } finally {
             setLoading(false);
             setRefreshing(false);

@@ -45,7 +45,7 @@ export default function LoanDetailScreen({ route, navigation }) {
             setLoan(loanRes.data.data);
             setPayments(paymentsRes.data.data || []);
         } catch {
-            Alert.alert('Error', 'Failed to load loan details.');
+            Alert.alert('Development Mode', 'App is under development mode.');
         } finally {
             setLoading(false);
         }

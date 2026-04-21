@@ -35,11 +35,20 @@ const DEMO_USERS = {
     },
 };
 
-// Generate a mock JWT token
+// Generate a mock JWT token (uses btoa() — works in React Native, unlike Buffer)
 const generateMockToken = (user) => {
     // Simulated JWT (not real, just for demo)
-    const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'; // Base64 for {"alg":"HS256","typ":"JWT"}
-    const payload = `mock_payload_for_${user.id}`;
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(
+        JSON.stringify({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            name: user.name,
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+        })
+    );
     const signature = 'demo_signature';
     return `${header}.${payload}.${signature}`;
 };
@@ -47,14 +56,14 @@ const generateMockToken = (user) => {
 export const mockAuthService = {
     // Mock login - checks demo credentials
     login: async (email, password) => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
                 const validPassword = DEMO_CREDENTIALS[email];
-                
+
                 if (validPassword && validPassword === password) {
                     const user = DEMO_USERS[email];
                     const token = generateMockToken(user);
-                    
+
                     resolve({
                         data: {
                             success: true,
@@ -66,12 +75,12 @@ export const mockAuthService = {
                         },
                     });
                 } else {
-                    resolve({
-                        data: {
-                            success: false,
-                            message: 'Invalid email or password.',
+                    // Reject with an axios-style error so authStore catch handles it properly
+                    reject({
+                        response: {
+                            status: 401,
+                            data: { message: 'Invalid email or password. Please check your credentials.' },
                         },
-                        status: 401,
                     });
                 }
             }, 1500); // Simulate network delay
