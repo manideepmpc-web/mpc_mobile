@@ -16,6 +16,7 @@ import { useRoute } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
+const DUMMY_OTP = '8888'; // 🎯 Dummy OTP for testing
 // Calculate box size to fit within the card (padding: 24*2, margin: 18*2, gap: 8*5)
 const BOX_SIZE = Math.min(48, (width - 120) / 6);
 
@@ -41,6 +42,13 @@ const OTPVerificationScreen = () => {
             navigation.navigate('Signup');
         }
     }, [email]);
+
+    // Auto-fill dummy OTP for testing
+    useEffect(() => {
+        // 🎯 Auto-fill dummy OTP "8888" for testing
+        const dummyOtpArray = DUMMY_OTP.split('');
+        setOtp(dummyOtpArray);
+    }, []);
 
     // Countdown timer
     useEffect(() => {
@@ -144,6 +152,11 @@ const OTPVerificationScreen = () => {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Enter 6-Digit Code</Text>
                     <Text style={styles.cardSub}>Code sent to {maskedEmail}</Text>
+                    
+                    {/* 🎯 Dummy OTP Indicator */}
+                    <View style={styles.dummyOtpIndicator}>
+                        <Text style={styles.dummyOtpText}>🔓 Testing Mode: OTP auto-filled as {DUMMY_OTP}</Text>
+                    </View>
 
                     {/* OTP Inputs */}
                     <View style={styles.otpRow}>
@@ -219,7 +232,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     cardTitle: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 6 },
-    cardSub: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 30 },
+    cardSub: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 12 },
+    
+    dummyOtpIndicator: {
+        backgroundColor: '#e8f5e8',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginBottom: 20,
+        borderLeftWidth: 4,
+        borderLeftColor: '#4CAF50',
+    },
+    dummyOtpText: { 
+        fontSize: 12, 
+        color: '#2e7d32', 
+        textAlign: 'center',
+        fontWeight: '600',
+    },
 
     otpRow: {
         flexDirection: 'row',

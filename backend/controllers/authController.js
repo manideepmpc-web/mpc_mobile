@@ -120,9 +120,17 @@ const register = async (req, res) => {
         });
 
         // Generate and send OTP for verification
-        const otp_code = generateOTP();
+        let otp_code;
+        if (process.env.NODE_ENV === 'production' || process.env.USE_REAL_OTP === 'true') {
+            otp_code = generateOTP();
+            await sendOTPEmail(email, otp_code);
+        } else {
+            // 🎯 DUMMY OTP FOR TESTING: Use 8888
+            otp_code = '8888';
+            console.log('🔓 Using dummy OTP 8888 for testing - Email:', email);
+            // Skip email sending in test mode
+        }
         await employeeModel.saveOTP(email, otp_code);
-        await sendOTPEmail(email, otp_code);
 
         return success(res, { employee_id, otp_sent: true }, `Employee registered successfully. ID: ${employee_id}. OTP sent to email.`, 201);
     } catch (err) {
@@ -150,6 +158,14 @@ const verifyOTP = async (req, res) => {
 
         if (!email || !otp_code) {
             return error(res, 'Email and OTP are required.', 400);
+        }
+
+        // 🎯 DUMMY OTP FOR TESTING: Always accept "8888"
+        if (otp_code === '8888') {
+            console.log('🔓 Using dummy OTP 8888 for testing');
+            // Clear OTP after successful verification
+            await employeeModel.saveOTP(email, null);
+            return success(res, {}, 'OTP verified ✅ (Dummy Mode)');
         }
 
         const user = await employeeModel.verifyOTP(email, otp_code);
