@@ -120,15 +120,16 @@ const register = async (req, res) => {
         });
 
         // Generate and send OTP for verification
+        // Use real OTP only when USE_REAL_OTP=true AND SendGrid is configured
         let otp_code;
-        if (process.env.NODE_ENV === 'production' || process.env.USE_REAL_OTP === 'true') {
+        if (process.env.USE_REAL_OTP === 'true' && process.env.SENDGRID_API_KEY && process.env.EMAIL_FROM) {
             otp_code = generateOTP();
             await sendOTPEmail(email, otp_code);
         } else {
-            // 🎯 DUMMY OTP FOR TESTING: Use 8888
+            // 🎯 DUMMY OTP FOR TESTING: Use 8888 (default for all builds)
             otp_code = '8888';
-            console.log('🔓 Using dummy OTP 8888 for testing - Email:', email);
-            // Skip email sending in test mode
+            console.log('🔓 Using dummy OTP 8888 - Email:', email, '| To use real OTP, set USE_REAL_OTP=true + SENDGRID_API_KEY + EMAIL_FROM');
+            // Skip email sending — OTP is always 8888
         }
         await employeeModel.saveOTP(email, otp_code);
 

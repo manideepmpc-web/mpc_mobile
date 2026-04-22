@@ -16,7 +16,8 @@ import { useRoute } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 const OTP_LENGTH = 4;
 const RESEND_COOLDOWN = 60;
-const DUMMY_OTP = '8888'; // 🎯 Dummy OTP for testing
+// Default OTP is 8888 unless real email is configured on server
+const DEFAULT_OTP_HINT = '8888';
 // Calculate box size to fit within the card (padding: 24*2, margin: 18*2, gap: 8*3)
 const BOX_SIZE = Math.min(48, (width - 120) / 4);
 
@@ -43,12 +44,6 @@ const OTPVerificationScreen = () => {
         }
     }, [email]);
 
-    // Auto-fill dummy OTP for testing
-    useEffect(() => {
-        // 🎯 Auto-fill dummy OTP "8888" for testing
-        const dummyOtpArray = DUMMY_OTP.split('');
-        setOtp(dummyOtpArray);
-    }, []);
 
     // Countdown timer
     useEffect(() => {
@@ -152,10 +147,10 @@ const OTPVerificationScreen = () => {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Enter 4-Digit Code</Text>
                     <Text style={styles.cardSub}>Code sent to {maskedEmail}</Text>
-                    
-                    {/* 🎯 Dummy OTP Indicator */}
-                    <View style={styles.dummyOtpIndicator}>
-                        <Text style={styles.dummyOtpText}>🔓 Testing Mode: OTP auto-filled as {DUMMY_OTP}</Text>
+
+                    {/* OTP Hint */}
+                    <View style={styles.otpHintBox}>
+                        <Text style={styles.otpHintText}>🔒 Default OTP is <Text style={{ fontWeight: '800' }}>{DEFAULT_OTP_HINT}</Text> (unless email was sent to your inbox)</Text>
                     </View>
 
                     {/* OTP Inputs */}
@@ -233,8 +228,8 @@ const styles = StyleSheet.create({
     },
     cardTitle: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 6 },
     cardSub: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 12 },
-    
-    dummyOtpIndicator: {
+
+    otpHintBox: {
         backgroundColor: '#e8f5e8',
         paddingHorizontal: 12,
         paddingVertical: 8,
@@ -242,12 +237,12 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderLeftWidth: 4,
         borderLeftColor: '#4CAF50',
+        alignSelf: 'stretch',
     },
-    dummyOtpText: { 
-        fontSize: 12, 
-        color: '#2e7d32', 
+    otpHintText: {
+        fontSize: 12,
+        color: '#2e7d32',
         textAlign: 'center',
-        fontWeight: '600',
     },
 
     otpRow: {
