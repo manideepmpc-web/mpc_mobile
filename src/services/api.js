@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../constants/config';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000,
+    timeout: 30000, // 30s — Railway free tier can take 20-40s to wake up from sleep
     headers: {
         'Content-Type': 'application/json',
     },
@@ -24,8 +24,13 @@ api.interceptors.response.use(
     (error) => {
         if (error.response) {
             console.error('API Error:', error.response.status, error.response.data?.message);
+        } else if (error.code === 'ECONNABORTED') {
+            console.error('Request Timeout — server may be waking up. Please retry.');
+            // Attach a friendly message so catch blocks can show it
+            error.friendlyMessage = 'Server is waking up, please try again in a few seconds.';
         } else {
             console.error('Network Error:', error.message);
+            error.friendlyMessage = 'No internet connection or server unreachable.';
         }
         return Promise.reject(error);
     }

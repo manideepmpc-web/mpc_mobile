@@ -18,6 +18,9 @@ const SignupScreen = () => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPass, setConfirmPass] = useState('');
+    const [gender, setGender] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState('');
+    const [address, setAddress] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -61,24 +64,28 @@ const SignupScreen = () => {
                 email: email.trim().toLowerCase(),
                 password,
                 phone: phone.trim() || '',
-                role: 'employee',
-                department_id: 1,
                 designation: 'Employee',
+                role: 'employee',
                 date_of_joining: new Date().toISOString().split('T')[0],
+                gender: gender || 'male',
+                date_of_birth: dateOfBirth || '1995-01-01',
+                address: address.trim() || 'Not provided',
             };
 
             // Call backend register (sends email OTP)
             await authService.register(formData);
 
             // Navigate to OTP verification with email and password
-            navigation.navigate('OTPVerification', { 
+            navigation.navigate('OTPVerification', {
                 email: email.trim().toLowerCase(),
                 password: password
             });
             Alert.alert('Success', 'OTP sent to your email!');
         } catch (err) {
             console.error('Registration error:', err);
-            const msg = err.response?.data?.message || 'Registration failed. Please try again.';
+            const msg = err.response?.data?.message
+                || err.friendlyMessage
+                || 'Registration failed. Please try again.';
             Alert.alert('Registration Failed', msg);
         } finally {
             setLoading(false);
@@ -181,6 +188,55 @@ const SignupScreen = () => {
                         />
                     </Field>
 
+                    {/* Gender */}
+                    <Field icon="person-outline" label="Gender">
+                        <View style={styles.genderContainer}>
+                            <TouchableOpacity
+                                style={[styles.genderOption, gender === 'male' && styles.genderOptionSelected]}
+                                onPress={() => setGender('male')}
+                            >
+                                <Text style={[styles.genderText, gender === 'male' && styles.genderTextSelected]}>Male</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.genderOption, gender === 'female' && styles.genderOptionSelected]}
+                                onPress={() => setGender('female')}
+                            >
+                                <Text style={[styles.genderText, gender === 'female' && styles.genderTextSelected]}>Female</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.genderOption, gender === 'other' && styles.genderOptionSelected]}
+                                onPress={() => setGender('other')}
+                            >
+                                <Text style={[styles.genderText, gender === 'other' && styles.genderTextSelected]}>Other</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Field>
+
+                    {/* Date of Birth */}
+                    <Field icon="calendar-outline" label="Date of Birth">
+                        <TextInput
+                            style={styles.input}
+                            placeholder="YYYY-MM-DD"
+                            placeholderTextColor={COLORS.textMuted}
+                            value={dateOfBirth}
+                            onChangeText={setDateOfBirth}
+                            maxLength={10}
+                        />
+                    </Field>
+
+                    {/* Address */}
+                    <Field icon="home-outline" label="Address">
+                        <TextInput
+                            style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+                            placeholder="Enter your address"
+                            placeholderTextColor={COLORS.textMuted}
+                            value={address}
+                            onChangeText={setAddress}
+                            multiline
+                            numberOfLines={3}
+                        />
+                    </Field>
+
                     {/* OTP Notice */}
                     <View style={styles.otpNotice}>
                         <Ionicons name="mail-outline" size={15} color={COLORS.primary} />
@@ -276,6 +332,17 @@ const styles = StyleSheet.create({
     loginLink: { marginTop: 18, paddingVertical: 10, alignItems: 'center' },
     loginText: { fontSize: 14, color: COLORS.textSecondary },
     loginBold: { color: COLORS.primary, fontWeight: '700' },
+    genderContainer: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+    genderOption: {
+        flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12,
+        borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.background,
+        alignItems: 'center',
+    },
+    genderOptionSelected: {
+        borderColor: COLORS.primary, backgroundColor: COLORS.primary + '15',
+    },
+    genderText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
+    genderTextSelected: { color: COLORS.primary, fontWeight: '700' },
 });
 
 export default SignupScreen;
