@@ -12,6 +12,8 @@ const locationRoutes = require('./routes/locationRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const loanRoutes = require('./routes/loanRoutes');
 
+const initializeDatabase = require('./init-db');
+
 const app = express();
 
 // Middleware
@@ -46,9 +48,17 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀 MPC HRMS Server running on http://localhost:${PORT}`);
-    console.log(`📅 Started at: ${new Date().toLocaleString()}`);
-    console.log(`🔒 JWT Auth: Enabled`);
-    console.log(`✅ Ready for local testing`);
-});
+
+initializeDatabase()
+    .then(() => {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`\n🚀 MPC HRMS Server running on http://localhost:${PORT}`);
+            console.log(`📅 Started at: ${new Date().toLocaleString()}`);
+            console.log(`🔒 JWT Auth: Enabled`);
+            console.log(`✅ Ready to serve requests`);
+        });
+    })
+    .catch((err) => {
+        console.error('❌ Failed to initialize database. Server not started.', err.message);
+        process.exit(1);
+    });
