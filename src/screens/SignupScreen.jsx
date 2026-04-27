@@ -11,6 +11,8 @@ import * as Contacts from 'expo-contacts';
 import { COLORS } from '../constants/colors';
 import { authService } from '../services';
 import { validateEmail, validatePhone, validateDate } from '../utils/helpers';
+import { APP_MODE } from '../config/appMode';
+import { runNetworkDiagnostics } from '../utils/networkDebug';
 
 const SignupScreen = () => {
     const navigation = useNavigation();
@@ -153,8 +155,16 @@ const SignupScreen = () => {
                 address: address.trim() || 'Not provided',
             };
 
+            // Enhanced logging for debugging
+            console.log('📝 Registration Data:', {
+                mode: APP_MODE,
+                formData: { ...formData, password: '***' } // Hide password in logs
+            });
+
             // Call backend register (sends email OTP)
-            await authService.register(formData);
+            const response = await authService.register(formData);
+            
+            console.log('✅ Registration Response:', response);
 
             // Navigate to OTP verification with email and password
             navigation.navigate('OTPVerification', {
@@ -163,13 +173,85 @@ const SignupScreen = () => {
             });
             Alert.alert('Success', 'OTP sent to your email!');
         } catch (err) {
-            console.error('Registration error:', err);
-            const msg = err.response?.data?.message
-                || err.friendlyMessage
-                || 'Registration failed. Please try again.';
-            Alert.alert('Registration Failed', msg);
+            console.error('❌ Registration Error Details:', {
+                message: err.message,
+                code: err.code,
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data,
+                config: err.config,
+                isNetworkError: !err.response,
+                isTimeout: err.code === 'ECONNABORTED',
+                isServerError: err.response?.status >= 500,
+                isClientError: err.response?.status >= 400 && err.response?.status < 500
+            });
+
+            // Build detailed error message
+            let errorMessage = 'Registration failed. Please try again.';
+            
+            if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.response?.data?.errors?.length > 0) {
+                errorMessage = err.response.data.errors.join(', ');
+            } else if (err.friendlyMessage) {
+                errorMessage = err.friendlyMessage;
+            } else if (err.code === 'ECONNABORTED') {
+                errorMessage = 'Request timeout. Server may be waking up. Please try again.';
+            } else if (!err.response) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else if (err.response?.status === 422) {
+                errorMessage = 'Validation error. Please check your input data.';
+            } else if (err.response?.status === 409) {
+                errorMessage = 'Email already registered. Please use a different email.';
+            } else if (err.response?.status === 500) {
+                errorMessage = 'Server error. Please try again later.';
+            }
+
+            // Show detailed error to user
+            Alert.alert(
+                'Registration Failed', 
+                errorMessage,
+                [
+                    { text: 'OK', style: 'default' },
+                    { 
+                        text: 'Retry', 
+                        style: 'default',
+                        onPress: () => handleRegister()
+                    }
+                ]
+            );
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Debug function to test network connectivity
+    const handleNetworkDebug = async () => {
+        console.log('🔧 Running Network Debug...');
+        Alert.alert('Debug', 'Running network diagnostics. Check console for details.');
+        
+        try {
+            const results = await runNetworkDiagnostics();
+            
+            const message = `
+App Mode: ${results.networkInfo.appMode}
+API URL: ${results.networkInfo.apiBaseUrl}
+Connectivity: ${results.connectivityTest.success ? '✅ Pass' : '❌ Fail'}
+Registration: ${results.registrationTest.success ? '✅ Pass' : '❌ Fail'}
+
+Check console for detailed results.
+            `.trim();
+
+            Alert.alert(
+                'Network Diagnostics', 
+                message,
+                [{ text: 'OK', style: 'default' }]
+            );
+        } catch (error) {
+            console.error('Debug failed:', error);
+            Alert.alert('Debug Failed', error.message);
         }
     };
 
@@ -413,6 +495,18 @@ const SignupScreen = () => {
                         </LinearGradient>
                     </TouchableOpacity>
 
+                    {/* Debug Button - Only show in development */}
+                    {__DEV__ && (
+                        <TouchableOpacity
+                            style={styles.debugButton}
+                            onPress={handleNetworkDebug}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="bug-outline" size={16} color={COLORS.textMuted} />
+                            <Text style={styles.debugButtonText}>Test Network</Text>
+                        </TouchableOpacity>
+                    )}
+
                     {/* Login Link */}
                     <TouchableOpacity
                         style={styles.loginLink}
@@ -505,6 +599,26 @@ const styles = StyleSheet.create({
         marginTop: -8,
         marginBottom: 6,
         marginLeft: 4,
+    },
+    // Debug button styles
+    debugButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginTop: 8,
+        marginBottom: 8,
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    debugButtonText: {
+        fontSize: 12,
+        color: COLORS.textMuted,
+        marginLeft: 4,
+        fontWeight: '500',
     },
 });
 
