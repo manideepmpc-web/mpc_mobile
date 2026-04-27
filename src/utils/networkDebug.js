@@ -20,8 +20,8 @@ export const networkDebug = {
         }
 
         try {
-            // Test with a simple GET request to health endpoint or root
-            const testUrl = API_BASE_URL.replace('/api', '') + '/health';
+            // Test with a simple GET request to the API root
+            const testUrl = API_BASE_URL;
             console.log('🚀 Testing URL:', testUrl);
             
             const response = await axios.get(testUrl, {
