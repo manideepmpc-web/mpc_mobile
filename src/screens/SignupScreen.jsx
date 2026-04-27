@@ -24,6 +24,7 @@ const SignupScreen = () => {
     const [gender, setGender] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [address, setAddress] = useState('');
+    const [designation, setDesignation] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -100,7 +101,7 @@ const SignupScreen = () => {
             gender: validateField('gender', gender),
             dateOfBirth: validateField('dateOfBirth', dateOfBirth),
             address: validateField('address', address),
-            designation: validateField('designation', 'Employee')
+            designation: validateField('designation', designation)
         };
         
         setErrors(newErrors);
@@ -147,7 +148,7 @@ const SignupScreen = () => {
                 email: email.trim().toLowerCase(),
                 password,
                 phone: phone.trim() || '',
-                designation: 'Employee',
+                designation: designation.trim() || 'Employee',
                 role: 'employee',
                 date_of_joining: new Date().toISOString().split('T')[0],
                 gender: gender || 'male',
@@ -347,6 +348,27 @@ Check console for detailed results.
                         </View>
                         {/* Validation Added - Error message for phone */}
                         {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+                    </Field>
+
+                    {/* Designation */}
+                    <Field icon="briefcase-outline" label="Designation">
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. Software Developer, Manager"
+                            placeholderTextColor={COLORS.textMuted}
+                            value={designation}
+                            onChangeText={(text) => {
+                                setDesignation(text);
+                                clearError('designation');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('designation', designation);
+                                setErrors(prev => ({ ...prev, designation: error }));
+                            }}
+                            autoCapitalize="words"
+                        />
+                        {/* Validation Added - Error message for designation */}
+                        {errors.designation ? <Text style={styles.errorText}>{errors.designation}</Text> : null}
                     </Field>
 
                     {/* Password */}
