@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts';
 import { loanService } from '../services/loanService';
 import { COLORS } from '../constants/colors';
+import { validateEmail, validatePhone, validateDate } from '../utils/helpers';
 
 const Field = ({ label, children, required }) => (
     <View style={styles.field}>
@@ -55,8 +56,28 @@ export default function AddLoanScreen({ navigation }) {
 
     const handleSubmit = async () => {
         if (!borrowerName.trim()) return Alert.alert('Validation', 'Borrower name is required.');
-        if (!principal || isNaN(Number(principal)) || Number(principal) <= 0) return Alert.alert('Validation', 'Enter a valid principal amount.');
-        if (!startDate) return Alert.alert('Validation', 'Start date is required.');
+        if (borrowerContact.trim() && !validatePhone(borrowerContact.replace(/[^0-9]/g, '')))
+            return Alert.alert('Validation', 'Borrower phone number must be 10 digits.');
+        if (borrowerEmail.trim() && !validateEmail(borrowerEmail.trim()))
+            return Alert.alert('Validation', 'Please enter a valid borrower email.');
+
+        const numPrincipal = Number(principal);
+        if (!principal || isNaN(numPrincipal) || numPrincipal <= 0)
+            return Alert.alert('Validation', 'Enter a valid principal amount.');
+
+        const numRate = Number(interestRate);
+        if (interestRate && (isNaN(numRate) || numRate < 0))
+            return Alert.alert('Validation', 'Interest rate must be a non-negative number.');
+
+        if (!startDate || !validateDate(startDate))
+            return Alert.alert('Validation', 'Please enter a valid start date (YYYY-MM-DD).');
+
+        if (dueDate.trim()) {
+            if (!validateDate(dueDate.trim()))
+                return Alert.alert('Validation', 'Please enter a valid due date (YYYY-MM-DD).');
+            if (new Date(dueDate) < new Date(startDate))
+                return Alert.alert('Validation', 'Due date cannot be before start date.');
+        }
 
         setLoading(true);
         try {

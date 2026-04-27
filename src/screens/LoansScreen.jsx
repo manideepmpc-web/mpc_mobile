@@ -51,7 +51,7 @@ export default function LoansScreen({ navigation }) {
             setSummary(sumRes.data.data);
             setLoans(loansRes.data.data || []);
         } catch (e) {
-            Alert.alert('Development Mode', 'App is under development mode.');
+            // Silent error handling for offline APK builds
         } finally {
             setLoading(false);
             setRefreshing(false);

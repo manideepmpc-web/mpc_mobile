@@ -45,7 +45,7 @@ export default function DashboardScreen({ navigation }) {
             setSummary(sumRes.data.data);
             setRecentLoans((loansRes.data.data || []).slice(0, 5));
         } catch {
-            Alert.alert('Development Mode', 'App is under development mode.');
+            // Silent error handling for offline APK builds
         } finally {
             setLoading(false);
             setRefreshing(false);

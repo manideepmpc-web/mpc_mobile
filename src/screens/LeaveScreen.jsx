@@ -9,7 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import { COLORS } from '../constants/colors';
 import { leaveService } from '../services';
 import { LEAVE_TYPES } from '../constants/config';
-import { formatDate } from '../utils/helpers';
+import { formatDate, validateDate } from '../utils/helpers';
 import Input from '../components/Input';
 import Button from '../components/Button';
 
@@ -41,9 +41,15 @@ const LeaveScreen = () => {
     };
 
     const handleApply = async () => {
-        if (!form.from_date || !form.to_date || !form.reason) {
-            Alert.alert('Missing Fields', 'Please fill in all fields.'); return;
-        }
+        if (!form.leave_type) return Alert.alert('Validation', 'Please select a leave type.');
+        if (!form.from_date || !validateDate(form.from_date))
+            return Alert.alert('Validation', 'Please enter a valid from date (YYYY-MM-DD).');
+        if (!form.to_date || !validateDate(form.to_date))
+            return Alert.alert('Validation', 'Please enter a valid to date (YYYY-MM-DD).');
+        if (new Date(form.to_date) < new Date(form.from_date))
+            return Alert.alert('Validation', 'To date cannot be before from date.');
+        if (!form.reason.trim())
+            return Alert.alert('Validation', 'Please provide a reason for leave.');
         setSubmitting(true);
         try {
             await leaveService.apply(form);

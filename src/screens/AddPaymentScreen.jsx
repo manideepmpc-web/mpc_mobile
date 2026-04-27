@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { loanService } from '../services/loanService';
 import { COLORS } from '../constants/colors';
+import { validateDate } from '../utils/helpers';
 
 export default function AddPaymentScreen({ route, navigation }) {
     const { loanId, remaining } = route.params;
@@ -21,7 +22,8 @@ export default function AddPaymentScreen({ route, navigation }) {
         const numAmount = Number(amount);
         if (!amount || isNaN(numAmount) || numAmount <= 0) return Alert.alert('Validation', 'Enter a valid payment amount.');
         if (numAmount > remaining) return Alert.alert('Validation', `Amount cannot exceed remaining balance of ₹${remaining.toLocaleString('en-IN')}.`);
-        if (!paymentDate) return Alert.alert('Validation', 'Payment date is required.');
+        if (!paymentDate || !validateDate(paymentDate))
+            return Alert.alert('Validation', 'Please enter a valid payment date (YYYY-MM-DD).');
 
         setLoading(true);
         try {

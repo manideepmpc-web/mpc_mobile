@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
 import { useAuth } from '../store/authStore';
+import { validateEmail } from '../utils/helpers';
 
 const LoginScreen = () => {
     const navigation = useNavigation();
@@ -18,8 +19,8 @@ const LoginScreen = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const handleLogin = async () => {
-        if (!email.trim()) { Alert.alert('Missing Field', 'Please enter your email address.'); return; }
-        if (!password.trim()) { Alert.alert('Missing Field', 'Please enter your password.'); return; }
+        if (!email.trim() || !validateEmail(email.trim())) { Alert.alert('Validation', 'Please enter a valid email address.'); return; }
+        if (!password.trim() || password.length < 8) { Alert.alert('Validation', 'Password must be at least 8 characters.'); return; }
         setSubmitting(true);
         const result = await login(email.trim().toLowerCase(), password);
         setSubmitting(false);
@@ -80,7 +81,7 @@ const LoginScreen = () => {
                             style={[styles.input, { flex: 1, marginBottom: 0 }]}
                             value={password}
                             onChangeText={setPassword}
-                            placeholder="Enter your password"
+                            placeholder="Min. 8 characters"
                             placeholderTextColor={COLORS.textMuted}
                             secureTextEntry={!showPass}
                         />

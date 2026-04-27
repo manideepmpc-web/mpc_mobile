@@ -51,3 +51,21 @@ export const formatDuration = (checkIn, checkOut) => {
     const m = totalMins % 60;
     return `${h}h ${m}m`;
 };
+
+export const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+};
+
+export const validatePhone = (phone) => {
+    const re = /^[0-9]{10}$/;
+    return re.test(phone);
+};
+
+export const validateDate = (dateString) => {
+    const re = /^\d{4}-\d{2}-\d{2}$/;
+    if (!re.test(dateString)) return false;
+    const d = new Date(dateString);
+    return d instanceof Date && !isNaN(d.getTime()) && dateString === d.toISOString().split('T')[0];
+};
+

@@ -41,7 +41,7 @@ export default function LoanHistoryScreen({ navigation }) {
 
             setAllPayments(flat);
         } catch {
-            Alert.alert('Development Mode', 'App is under development mode.');
+            // Silent error handling for offline APK builds
         } finally {
             setLoading(false);
             setRefreshing(false);

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/config';
+import { sessionManager } from '../utils/sessionManager';
+import { isOnlineMode } from '../config/appMode';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -9,10 +11,20 @@ const api = axios.create({
     },
 });
 
-// Request interceptor — attach token
+// Request interceptor — attach token automatically
 api.interceptors.request.use(
-    (config) => {
-        // Token is injected by authStore via setAuthToken()
+    async (config) => {
+        // Only attach token for online mode
+        if (isOnlineMode()) {
+            try {
+                const token = await sessionManager.getToken();
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to get auth token:', error);
+            }
+        }
         return config;
     },
     (error) => Promise.reject(error)
@@ -36,11 +48,38 @@ api.interceptors.response.use(
     }
 );
 
-export const setAuthToken = (token) => {
-    if (token) {
+// Initialize auth token from session (call this on app start)
+export const initializeAuthToken = async () => {
+    if (isOnlineMode()) {
+        try {
+            const token = await sessionManager.getToken();
+            if (token) {
+                setAuthToken(token);
+                console.log('✅ Auth token initialized from session');
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to initialize auth token:', error);
+        }
+    }
+};
+
+// OLD: Manual token setting (preserved for compatibility)
+// export const setAuthToken = (token) => {
+//     if (token) {
+//         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+//     } else {
+//         delete api.defaults.headers.common['Authorization'];
+//     }
+// };
+
+// Updated setAuthToken function
+export const setAuthToken = async (token) => {
+    if (isOnlineMode() && token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('✅ Auth token set for API requests');
     } else {
         delete api.defaults.headers.common['Authorization'];
+        console.log('🗑️ Auth token cleared');
     }
 };
 

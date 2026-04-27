@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts';
 import { COLORS } from '../constants/colors';
 import { authService } from '../services';
+import { validateEmail, validatePhone, validateDate } from '../utils/helpers';
 
 const SignupScreen = () => {
     const navigation = useNavigation();
@@ -23,6 +24,88 @@ const SignupScreen = () => {
     const [address, setAddress] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Validation Added - Error states for each field
+    const [errors, setErrors] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPass: '',
+        gender: '',
+        dateOfBirth: '',
+        address: '',
+        designation: ''
+    });
+
+    // Validation Added - Clear specific field error
+    const clearError = (field) => {
+        setErrors(prev => ({ ...prev, [field]: '' }));
+    };
+
+    // Validation Added - Validate individual field
+    const validateField = (field, value) => {
+        let error = '';
+        
+        switch (field) {
+            case 'name':
+                if (!value.trim()) error = 'Name is required';
+                else if (value.trim().length < 3) error = 'Name must be at least 3 characters';
+                break;
+            case 'email':
+                if (!value.trim()) error = 'Email is required';
+                else if (!validateEmail(value.trim())) error = 'Please enter a valid email address';
+                break;
+            case 'phone':
+                if (value.trim() && !validatePhone(value.replace(/[^0-9]/g, ''))) {
+                    error = 'Phone number must be 10 digits';
+                }
+                break;
+            case 'password':
+                if (!value.trim()) error = 'Password is required';
+                else if (value.length < 8) error = 'Password must be at least 8 characters';
+                break;
+            case 'confirmPass':
+                if (!value.trim()) error = 'Please confirm your password';
+                else if (value !== password) error = 'Passwords do not match';
+                break;
+            case 'gender':
+                if (!value) error = 'Please select your gender';
+                break;
+            case 'dateOfBirth':
+                if (!value.trim()) error = 'Date of birth is required';
+                else if (!validateDate(value.trim())) error = 'Please enter a valid date of birth (YYYY-MM-DD)';
+                break;
+            case 'address':
+                if (!value.trim()) error = 'Address is required';
+                break;
+            case 'designation':
+                if (!value.trim()) error = 'Designation is required';
+                break;
+        }
+        
+        return error;
+    };
+
+    // Validation Added - Validate all fields
+    const validateAllFields = () => {
+        const newErrors = {
+            name: validateField('name', name),
+            email: validateField('email', email),
+            phone: validateField('phone', phone),
+            password: validateField('password', password),
+            confirmPass: validateField('confirmPass', confirmPass),
+            gender: validateField('gender', gender),
+            dateOfBirth: validateField('dateOfBirth', dateOfBirth),
+            address: validateField('address', address),
+            designation: validateField('designation', 'Employee')
+        };
+        
+        setErrors(newErrors);
+        
+        // Check if any errors exist
+        return !Object.values(newErrors).some(error => error !== '');
+    };
 
     const handlePickContact = async () => {
         try {
@@ -50,12 +133,10 @@ const SignupScreen = () => {
     };
 
     const handleRegister = async () => {
-        if (!name.trim()) return Alert.alert('Missing Field', 'Please enter your full name.');
-        if (!email.trim()) return Alert.alert('Missing Field', 'Please enter your email.');
-        if (!password.trim() || password.length < 6)
-            return Alert.alert('Validation', 'Password must be at least 6 characters.');
-        if (password !== confirmPass)
-            return Alert.alert('Validation', 'Passwords do not match.');
+        // Validation Added - Validate all fields before API call
+        if (!validateAllFields()) {
+            return; // Stop execution if validation fails
+        }
 
         setLoading(true);
         try {
@@ -123,9 +204,18 @@ const SignupScreen = () => {
                             placeholder="e.g. Rahul Kumar"
                             placeholderTextColor={COLORS.textMuted}
                             value={name}
-                            onChangeText={setName}
+                            onChangeText={(text) => {
+                                setName(text);
+                                clearError('name');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('name', name);
+                                setErrors(prev => ({ ...prev, name: error }));
+                            }}
                             autoCapitalize="words"
                         />
+                        {/* Validation Added - Error message for name */}
+                        {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
                     </Field>
 
                     {/* Email */}
@@ -135,10 +225,19 @@ const SignupScreen = () => {
                             placeholder="your@email.com"
                             placeholderTextColor={COLORS.textMuted}
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(text) => {
+                                setEmail(text);
+                                clearError('email');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('email', email);
+                                setErrors(prev => ({ ...prev, email: error }));
+                            }}
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
+                        {/* Validation Added - Error message for email */}
+                        {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
                     </Field>
 
                     {/* Phone — Optional */}
@@ -149,7 +248,14 @@ const SignupScreen = () => {
                                 placeholder="98xxxxxxxx"
                                 placeholderTextColor={COLORS.textMuted}
                                 value={phone}
-                                onChangeText={setPhone}
+                                onChangeText={(text) => {
+                                    setPhone(text);
+                                    clearError('phone');
+                                }}
+                                onBlur={() => {
+                                    const error = validateField('phone', phone);
+                                    setErrors(prev => ({ ...prev, phone: error }));
+                                }}
                                 keyboardType="phone-pad"
                                 maxLength={10}
                             />
@@ -157,6 +263,8 @@ const SignupScreen = () => {
                                 <Ionicons name="book" size={20} color={COLORS.primary} />
                             </TouchableOpacity>
                         </View>
+                        {/* Validation Added - Error message for phone */}
+                        {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
                     </Field>
 
                     {/* Password */}
@@ -164,16 +272,25 @@ const SignupScreen = () => {
                         <View style={styles.passRow}>
                             <TextInput
                                 style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                                placeholder="Min. 6 characters"
+                                placeholder="Min. 8 characters"
                                 placeholderTextColor={COLORS.textMuted}
                                 value={password}
-                                onChangeText={setPassword}
+                                onChangeText={(text) => {
+                                    setPassword(text);
+                                    clearError('password');
+                                }}
+                                onBlur={() => {
+                                    const error = validateField('password', password);
+                                    setErrors(prev => ({ ...prev, password: error }));
+                                }}
                                 secureTextEntry={!showPass}
                             />
                             <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPass(!showPass)}>
                                 <Ionicons name={showPass ? 'eye-outline' : 'eye-off-outline'} size={20} color={COLORS.textMuted} />
                             </TouchableOpacity>
                         </View>
+                        {/* Validation Added - Error message for password */}
+                        {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
                     </Field>
 
                     {/* Confirm Password */}
@@ -183,9 +300,18 @@ const SignupScreen = () => {
                             placeholder="Re-enter password"
                             placeholderTextColor={COLORS.textMuted}
                             value={confirmPass}
-                            onChangeText={setConfirmPass}
+                            onChangeText={(text) => {
+                                setConfirmPass(text);
+                                clearError('confirmPass');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('confirmPass', confirmPass);
+                                setErrors(prev => ({ ...prev, confirmPass: error }));
+                            }}
                             secureTextEntry={!showPass}
                         />
+                        {/* Validation Added - Error message for confirm password */}
+                        {errors.confirmPass ? <Text style={styles.errorText}>{errors.confirmPass}</Text> : null}
                     </Field>
 
                     {/* Gender */}
@@ -193,23 +319,34 @@ const SignupScreen = () => {
                         <View style={styles.genderContainer}>
                             <TouchableOpacity
                                 style={[styles.genderOption, gender === 'male' && styles.genderOptionSelected]}
-                                onPress={() => setGender('male')}
+                                onPress={() => {
+                                    setGender('male');
+                                    clearError('gender');
+                                }}
                             >
                                 <Text style={[styles.genderText, gender === 'male' && styles.genderTextSelected]}>Male</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.genderOption, gender === 'female' && styles.genderOptionSelected]}
-                                onPress={() => setGender('female')}
+                                onPress={() => {
+                                    setGender('female');
+                                    clearError('gender');
+                                }}
                             >
                                 <Text style={[styles.genderText, gender === 'female' && styles.genderTextSelected]}>Female</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.genderOption, gender === 'other' && styles.genderOptionSelected]}
-                                onPress={() => setGender('other')}
+                                onPress={() => {
+                                    setGender('other');
+                                    clearError('gender');
+                                }}
                             >
                                 <Text style={[styles.genderText, gender === 'other' && styles.genderTextSelected]}>Other</Text>
                             </TouchableOpacity>
                         </View>
+                        {/* Validation Added - Error message for gender */}
+                        {errors.gender ? <Text style={styles.errorText}>{errors.gender}</Text> : null}
                     </Field>
 
                     {/* Date of Birth */}
@@ -219,9 +356,18 @@ const SignupScreen = () => {
                             placeholder="YYYY-MM-DD"
                             placeholderTextColor={COLORS.textMuted}
                             value={dateOfBirth}
-                            onChangeText={setDateOfBirth}
+                            onChangeText={(text) => {
+                                setDateOfBirth(text);
+                                clearError('dateOfBirth');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('dateOfBirth', dateOfBirth);
+                                setErrors(prev => ({ ...prev, dateOfBirth: error }));
+                            }}
                             maxLength={10}
                         />
+                        {/* Validation Added - Error message for date of birth */}
+                        {errors.dateOfBirth ? <Text style={styles.errorText}>{errors.dateOfBirth}</Text> : null}
                     </Field>
 
                     {/* Address */}
@@ -231,10 +377,19 @@ const SignupScreen = () => {
                             placeholder="Enter your address"
                             placeholderTextColor={COLORS.textMuted}
                             value={address}
-                            onChangeText={setAddress}
+                            onChangeText={(text) => {
+                                setAddress(text);
+                                clearError('address');
+                            }}
+                            onBlur={() => {
+                                const error = validateField('address', address);
+                                setErrors(prev => ({ ...prev, address: error }));
+                            }}
                             multiline
                             numberOfLines={3}
                         />
+                        {/* Validation Added - Error message for address */}
+                        {errors.address ? <Text style={styles.errorText}>{errors.address}</Text> : null}
                     </Field>
 
                     {/* OTP Notice */}
@@ -343,6 +498,14 @@ const styles = StyleSheet.create({
     },
     genderText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
     genderTextSelected: { color: COLORS.primary, fontWeight: '700' },
+    // Validation Added - Error text style
+    errorText: {
+        color: '#FF3B30',
+        fontSize: 12,
+        marginTop: -8,
+        marginBottom: 6,
+        marginLeft: 4,
+    },
 });
 
 export default SignupScreen;
