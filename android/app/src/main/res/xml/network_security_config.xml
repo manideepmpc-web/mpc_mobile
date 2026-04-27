@@ -7,7 +7,7 @@
         <domain includeSubdomains="true">10.230.211.46</domain>
     </domain-config>
     
-    <!-- Allow Railway backend HTTPS -->
+    <!-- Railway backend HTTPS - Trust Let's Encrypt certificates -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">railway.app</domain>
         <domain includeSubdomains="true">mpc-backend-production-59a0.up.railway.app</domain>
@@ -17,10 +17,19 @@
         </trust-anchors>
     </domain-config>
     
-    <!-- Default configuration -->
+    <!-- Debug overrides for development -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </debug-overrides>
+    
+    <!-- Base configuration - Allow system and user certificates -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system"/>
+            <certificates src="user"/>
         </trust-anchors>
     </base-config>
 </network-security-config>
